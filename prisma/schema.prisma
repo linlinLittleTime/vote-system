@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 投票规则类型
+enum RuleType {
+  single    // 单选（默认）
+  multiple  // 多选
+}
+
+// 活动状态
+enum Status {
+  draft     // 草稿
+  active    // 进行中（默认）
+  closed    // 已结束
+}
+
+// 用户识别方式
+enum VoterIdType {
+  localStorage       // LocalStorage UUID（默认，推荐）
+  phone              // 手机号验证码
+  wechat             // 微信OAuth授权
+  ip_ua_fingerprint  // IP+UA+指纹（兼容旧方案）
+}
+
+// 投票展示样式配置表
+model Style {
+  id          String    @id @default(cuid())
+  name        String    // 样式名称：水晶柱/卡片流/液态柱等
+  slug        String    @unique // 样式标识：crystal-bar / card-flow等
+  thumbnail   String?   // 缩略图URL（可选）
+  createdAt   DateTime  @default(now())
+
+  activities  Activity[]
+}
+
+// 活动表 - P2扩展字段
+model Activity {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  // 活动描述（可选）
+  styleId     String   @default("default")
+  style       Style    @relation(fields: [styleId], references: [id])
+
+  // 选项存储：[{id: "opt1", text: "选项A", imageUrl: "", votes: 0}, ...]
+  options     Json
+
+  // ===== P2新增字段 =====
+  // 投票规则
+  ruleType    RuleType @default(single)
+  maxVotes    Int?     // 多选时最大可选数（null表示不限）
+
+  // 用户识别方式
+  voterIdType VoterIdType @default(localStorage)
+
+  // 活动有效期
+  startTime   DateTime?   // 开始时间（可选）
+  endTime     DateTime?   // 结束时间（可选）
+
+  // 活动状态
+  status      Status   @default(active)
+
+  // 自定义样式配置（可选）
+  styleConfig Json?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  votes       Vote[]
+}
+
+// 投票记录表 - P2修改约束支持多选
+model Vote {
+  id         String   @id @default(cuid())
+  activityId String
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  optionId   String   // 投票选项ID
+  voterId    String   // 用户标识（localStorage UUID或其他）
+  createdAt  DateTime @default(now())
+
+  // 修改唯一约束：允许同一用户对不同选项投票（支持多选）
+  @@unique([activityId, voterId, optionId]) // 同一用户不能对同一选项重复投票
+  @@index([activityId])
+  @@index([activityId, voterId])  // 新增：快速查询用户已投票数
+}
