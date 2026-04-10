@@ -17,6 +17,40 @@ interface Style {
   slug: string;
 }
 
+interface MyActivity {
+  id: string;
+  title: string;
+  createdAt: string;
+  totalVotes: number;
+  status: string;
+}
+
+// localStorage key
+const MY_ACTIVITIES_KEY = "vote_system_my_activities";
+
+// 保存活动到localStorage
+function saveActivityToLocalStorage(activity: { id: string; title: string; createdAt: string }) {
+  if (typeof window === "undefined") return;
+
+  const stored = localStorage.getItem(MY_ACTIVITIES_KEY);
+  const activities = stored ? JSON.parse(stored) : [];
+
+  // 避免重复
+  if (!activities.find((a: { id: string }) => a.id === activity.id)) {
+    activities.unshift(activity);
+    // 最多保存50个
+    if (activities.length > 50) activities.pop();
+    localStorage.setItem(MY_ACTIVITIES_KEY, JSON.stringify(activities));
+  }
+}
+
+// 从localStorage获取活动列表
+function getActivitiesFromLocalStorage(): Array<{ id: string; title: string; createdAt: string }> {
+  if (typeof window === "undefined") return [];
+  const stored = localStorage.getItem(MY_ACTIVITIES_KEY);
+  return stored ? JSON.parse(stored) : [];
+}
+
 // 动态加载样式组件用于预览
 const styleComponents: Record<string, React.ComponentType<any>> = {
   "default-bar": dynamic(() => import("@/components/styles/DefaultBarDisplay").then(mod => ({ default: mod.default || mod })), { ssr: false }),
@@ -58,6 +92,19 @@ const mockOptions = [
   { id: "4", text: "选项 D", votes: 15, percentage: 12 },
 ];
 
+// 状态标签颜色
+const statusColors: Record<string, string> = {
+  draft: "bg-gray-100 text-gray-600",
+  active: "bg-green-100 text-green-600",
+  closed: "bg-red-100 text-red-600",
+};
+
+const statusLabels: Record<string, string> = {
+  draft: "草稿",
+  active: "进行中",
+  closed: "已结束",
+};
+
 export default function Home() {
   const router = useRouter();
   const [title, setTitle] = useState("示例投票活动");
@@ -83,6 +130,10 @@ export default function Home() {
   const [endTime, setEndTime] = useState<string>("");
   const [status, setStatus] = useState<"draft" | "active">("active");
 
+  // 我的活动
+  const [myActivities, setMyActivities] = useState<MyActivity[]>([]);
+  const [loadingMyActivities, setLoadingMyActivities] = useState(false);
+
   // 获取样式列表
   useEffect(() => {
     fetch("/api/styles")
@@ -95,6 +146,44 @@ export default function Home() {
       })
       .catch((err) => console.error("获取样式失败:", err));
   }, []);
+
+  // 加载我的活动
+  useEffect(() => {
+    loadMyActivities();
+  }, []);
+
+  const loadMyActivities = async () => {
+    const localActivities = getActivitiesFromLocalStorage();
+    if (localActivities.length === 0) {
+      setMyActivities([]);
+      return;
+    }
+
+    setLoadingMyActivities(true);
+    try {
+      // 批量获取活动详情
+      const ids = localActivities.map((a) => a.id);
+      const res = await fetch("/api/activities/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+
+      if (res.ok) {
+        const activities = await res.json();
+        // 合并本地存储的顺序和服务器数据
+        const merged = localActivities.map((local) => {
+          const server = activities.find((a: MyActivity) => a.id === local.id);
+          return server || local;
+        }).filter((a): a is MyActivity => !!a);
+        setMyActivities(merged);
+      }
+    } catch (err) {
+      console.error("加载活动失败:", err);
+    } finally {
+      setLoadingMyActivities(false);
+    }
+  };
 
   const addOption = () => {
     if (options.length >= 10) {
@@ -198,6 +287,14 @@ export default function Home() {
       }
 
       const activity = await res.json();
+
+      // 保存到localStorage
+      saveActivityToLocalStorage({
+        id: activity.id,
+        title: activity.title,
+        createdAt: activity.createdAt,
+      });
+
       router.push(`/activity/${activity.id}`);
     } catch (err) {
       setError("创建活动失败，请重试");
@@ -550,7 +647,7 @@ export default function Home() {
                   <span className="flex items-center justify-center gap-2">
                     <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      <path className="opacity:75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
                     创建中...
                   </span>
@@ -559,6 +656,48 @@ export default function Home() {
                 )}
               </motion.button>
             </form>
+
+            {/* 我的活动 */}
+            {myActivities.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="mt-6 pt-6 border-t border-gray-200"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-gray-800">📁 我创建的活动</h3>
+                  <button
+                    onClick={() => router.push("/my-activities")}
+                    className="text-xs text-purple-600 hover:text-purple-700"
+                  >
+                    查看全部 →
+                  </button>
+                </div>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                  {myActivities.slice(0, 3).map((activity) => (
+                    <motion.div
+                      key={activity.id}
+                      whileHover={{ scale: 1.01 }}
+                      onClick={() => router.push(`/activity/${activity.id}`)}
+                      className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">{activity.title}</p>
+                          <p className="text-xs text-gray-500">
+                            {activity.totalVotes ?? 0} 票 · {new Date(activity.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full ${statusColors[activity.status] || "bg-gray-100 text-gray-600"}`}>
+                          {statusLabels[activity.status] || activity.status}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </div>
         </motion.div>
 
