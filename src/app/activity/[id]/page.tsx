@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { LazyImage } from "@/components/ui/LazyImage";
 
 interface Activity {
@@ -36,6 +37,25 @@ export default function ActivityPage() {
     }
   };
 
+  // 复制链接
+  const copyLink = async () => {
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+    const voteUrl = `${baseUrl}/vote/${activity?.id}`;
+    try {
+      await navigator.clipboard.writeText(voteUrl);
+      alert("链接已复制到剪贴板！");
+    } catch {
+      // 降级方案
+      const input = document.createElement("input");
+      input.value = voteUrl;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      alert("链接已复制到剪贴板！");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
@@ -47,7 +67,15 @@ export default function ActivityPage() {
   if (!activity) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
-        <div className="text-white text-xl">活动不存在</div>
+        <div className="text-center">
+          <div className="text-white text-xl mb-4">活动不存在</div>
+          <button
+            onClick={() => router.push("/")}
+            className="px-6 py-2 bg-white text-purple-600 rounded-lg font-medium"
+          >
+            返回首页
+          </button>
+        </div>
       </div>
     );
   }
@@ -62,14 +90,56 @@ export default function ActivityPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
+        {/* 顶部导航栏 */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-3"
+        >
+          <button
+            onClick={() => router.push("/")}
+            className="flex items-center gap-2 text-white/80 hover:text-white transition"
+          >
+            <span>←</span>
+            <span>返回首页</span>
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push("/my-activities")}
+              className="px-3 py-1.5 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition"
+            >
+              📁 我的活动
+            </button>
+            <button
+              onClick={() => router.push("/")}
+              className="px-3 py-1.5 text-sm bg-white/20 text-white rounded-lg hover:bg-white/30 transition"
+            >
+              + 创建新活动
+            </button>
+          </div>
+        </motion.div>
+
+        {/* 成功提示 */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center mb-8"
+        >
+          <div className="inline-flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-full text-sm mb-4">
+            ✅ 活动创建成功！
+          </div>
           <h1 className="text-3xl font-bold text-white mb-2">{activity.title}</h1>
-          <p className="text-white/80">活动已创建成功！</p>
-        </div>
+          <p className="text-white/80">分享下方链接或二维码邀请参与者投票</p>
+        </motion.div>
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* 二维码卡片 */}
-          <div className="bg-white rounded-2xl shadow-2xl p-6">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-2xl shadow-2xl p-6"
+          >
             <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
               📱 扫码投票
             </h2>
@@ -85,12 +155,25 @@ export default function ActivityPage() {
             </p>
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-400 mb-1">投票链接：</p>
-              <p className="text-sm text-purple-600 break-all">{voteUrl}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-purple-600 break-all flex-1">{voteUrl}</p>
+                <button
+                  onClick={copyLink}
+                  className="px-3 py-1 text-xs bg-purple-100 text-purple-600 rounded hover:bg-purple-200 transition flex-shrink-0"
+                >
+                  复制
+                </button>
+              </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* 大屏入口 */}
-          <div className="bg-white rounded-2xl shadow-2xl p-6">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-2xl shadow-2xl p-6"
+          >
             <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
               🖥️ 大屏展示
             </h2>
@@ -111,16 +194,64 @@ export default function ActivityPage() {
               <p className="text-xs text-gray-400 mb-1">大屏链接：</p>
               <p className="text-sm text-purple-600 break-all">{screenUrl}</p>
             </div>
-          </div>
+          </motion.div>
         </div>
 
+        {/* 快捷操作 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-6 bg-white rounded-2xl shadow-2xl p-6"
+        >
+          <h2 className="text-xl font-bold text-gray-800 mb-4">🚀 快捷操作</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <button
+              onClick={() => router.push(`/vote/${activity.id}`)}
+              className="p-4 bg-purple-50 rounded-xl hover:bg-purple-100 transition text-center"
+            >
+              <div className="text-2xl mb-1">🗳️</div>
+              <div className="text-sm text-gray-700">参与投票</div>
+            </button>
+            <button
+              onClick={() => router.push(`/screen/${activity.id}`)}
+              className="p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition text-center"
+            >
+              <div className="text-2xl mb-1">🖥️</div>
+              <div className="text-sm text-gray-700">大屏展示</div>
+            </button>
+            <button
+              onClick={() => router.push("/my-activities")}
+              className="p-4 bg-green-50 rounded-xl hover:bg-green-100 transition text-center"
+            >
+              <div className="text-2xl mb-1">📊</div>
+              <div className="text-sm text-gray-700">查看统计</div>
+            </button>
+            <button
+              onClick={copyLink}
+              className="p-4 bg-orange-50 rounded-xl hover:bg-orange-100 transition text-center"
+            >
+              <div className="text-2xl mb-1">📋</div>
+              <div className="text-sm text-gray-700">复制链接</div>
+            </button>
+          </div>
+        </motion.div>
+
         {/* 选项预览 */}
-        <div className="mt-6 bg-white rounded-2xl shadow-2xl p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-6 bg-white rounded-2xl shadow-2xl p-6"
+        >
           <h2 className="text-xl font-bold text-gray-800 mb-4">📋 投票选项</h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {activity.options.map((option) => (
-              <div
+            {activity.options.map((option, index) => (
+              <motion.div
                 key={option.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + index * 0.05 }}
                 className="p-4 bg-gray-50 rounded-xl border border-gray-100"
               >
                 {option.imageUrl && (
@@ -134,20 +265,20 @@ export default function ActivityPage() {
                   </div>
                 )}
                 <span className="text-gray-700">{option.text}</span>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* 返回按钮 */}
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => router.push("/")}
-            className="px-6 py-2 text-white/80 hover:text-white transition"
-          >
-            ← 返回首页
-          </button>
-        </div>
+        {/* 底部提示 */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-6 text-center text-white/60 text-sm"
+        >
+          💡 活动已自动保存到"我的活动"，随时可以查看投票统计和导出数据
+        </motion.div>
       </div>
     </div>
   );
