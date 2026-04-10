@@ -657,23 +657,29 @@ export default function Home() {
               </motion.button>
             </form>
 
-            {/* 我的活动 */}
-            {myActivities.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="mt-6 pt-6 border-t border-gray-200"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-gray-800">📁 我创建的活动</h3>
+            {/* 我的活动 - 始终显示 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="mt-6 pt-6 border-t border-gray-200"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-gray-800">📁 我创建的活动</h3>
+                {myActivities.length > 0 && (
                   <button
                     onClick={() => router.push("/my-activities")}
                     className="text-xs text-purple-600 hover:text-purple-700"
                   >
                     查看全部 →
                   </button>
+                )}
+              </div>
+              {myActivities.length === 0 ? (
+                <div className="text-center py-4 text-gray-500 text-sm">
+                  暂无活动，创建后会自动保存在这里
                 </div>
+              ) : (
                 <div className="space-y-2 max-h-[200px] overflow-y-auto">
                   {myActivities.slice(0, 3).map((activity) => (
                     <motion.div
@@ -696,8 +702,8 @@ export default function Home() {
                     </motion.div>
                   ))}
                 </div>
-              </motion.div>
-            )}
+              )}
+            </motion.div>
           </div>
         </motion.div>
 
