@@ -1,14 +1,15 @@
 declare module 'next/link' {
-  import type { LinkProps as OriginalLinkProps } from 'next/dist/client/link'
-  import type { ReactElementType } from 'react'
+  import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
-  type LinkRestProps = Omit<OriginalLinkProps, 'href'>
-
-  export type LinkProps = LinkRestProps & {
+  export interface LinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
     href: string | { pathname: string; query?: Record<string, string | string[] | undefined> }
+    replace?: boolean
+    scroll?: boolean
+    prefetch?: boolean | 'unknown'
+    children?: ReactNode
   }
 
-  export default function Link(props: LinkProps & { children?: React.ReactNode }): ReactElementType
+  export default function Link(props: LinkProps): JSX.Element
 }
 
 declare module 'next/dynamic' {
