@@ -27,9 +27,31 @@ declare module 'next/dynamic' {
 }
 
 declare module 'next/headers' {
-  import type { RequestCookies } from 'next/dist/server/web/spec-extension/cookies'
-  import type { Headers } from 'next/dist/server/web/spec-extension/headers'
+  export interface RequestCookie {
+    name: string
+    value: string
+  }
 
-  export function cookies(): Promise<RequestCookies>
+  export interface ResponseCookie {
+    name: string
+    value: string
+    expires?: Date | number
+    maxAge?: number
+    domain?: string
+    path?: string
+    secure?: boolean
+    httpOnly?: boolean
+    sameSite?: 'strict' | 'lax' | 'none'
+  }
+
+  export interface ReadonlyRequestCookies {
+    get: (name: string) => RequestCookie | undefined
+    getAll: () => RequestCookie[]
+    has: (name: string) => boolean
+    set: (name: string, value: string, options?: Partial<ResponseCookie>) => void
+    delete: (name: string) => void
+  }
+
+  export function cookies(): Promise<ReadonlyRequestCookies>
   export function headers(): Promise<Headers>
 }
