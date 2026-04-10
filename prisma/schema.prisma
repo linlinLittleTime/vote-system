@@ -53,6 +53,9 @@ model Activity {
   // 选项存储：[{id: "opt1", text: "选项A", imageUrl: "", votes: 0}, ...]
   options     Json
 
+  // ===== 用户标识 =====
+  userId      String   @default("legacy") // 创建者的用户ID，旧数据默认为legacy
+
   // ===== P2新增字段 =====
   // 投票规则
   ruleType    RuleType @default(single)
@@ -75,6 +78,8 @@ model Activity {
   updatedAt   DateTime @updatedAt
 
   votes       Vote[]
+
+  @@index([userId])  // 按用户查询优化
 }
 
 // 投票记录表 - P2修改约束支持多选

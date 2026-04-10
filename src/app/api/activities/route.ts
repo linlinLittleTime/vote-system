@@ -43,6 +43,8 @@ export async function POST(request: Request) {
       description,
       options,
       styleId,
+      // 用户标识
+      userId,
       // P2新增字段
       ruleType = "single",
       maxVotes,
@@ -151,6 +153,8 @@ export async function POST(request: Request) {
         description: description?.trim() || null,
         styleId: styleId || "default",
         options: optionsWithVotes,
+        // 用户标识
+        userId: userId || "anonymous",
         // P2新增字段
         ruleType,
         maxVotes: maxVotes || null,

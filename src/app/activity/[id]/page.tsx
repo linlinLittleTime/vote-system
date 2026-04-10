@@ -105,10 +105,10 @@ export default function ActivityPage() {
           </button>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => router.push("/my-activities")}
+              onClick={() => router.push("/dashboard")}
               className="px-3 py-1.5 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition"
             >
-              📁 我的活动
+              📁 工作台
             </button>
             <button
               onClick={() => router.push("/")}
@@ -221,11 +221,11 @@ export default function ActivityPage() {
               <div className="text-sm text-gray-700">大屏展示</div>
             </button>
             <button
-              onClick={() => router.push("/my-activities")}
+              onClick={() => router.push("/dashboard")}
               className="p-4 bg-green-50 rounded-xl hover:bg-green-100 transition text-center"
             >
               <div className="text-2xl mb-1">📊</div>
-              <div className="text-sm text-gray-700">查看统计</div>
+              <div className="text-sm text-gray-700">工作台</div>
             </button>
             <button
               onClick={copyLink}
