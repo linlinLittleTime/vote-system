@@ -19,13 +19,13 @@ interface Style {
 
 // 动态加载样式组件用于预览
 const styleComponents: Record<string, React.ComponentType<any>> = {
-  "default-bar": dynamic(() => import("@/components/styles/DefaultBarDisplay"), { ssr: false }),
-  "card-flow": dynamic(() => import("@/components/styles/CardFlowDisplay"), { ssr: false }),
-  "crystal-bar": dynamic(() => import("@/components/styles/CrystalBarDisplay"), { ssr: false }),
-  "liquid-bar": dynamic(() => import("@/components/styles/LiquidBarDisplay"), { ssr: false }),
-  "donut-group": dynamic(() => import("@/components/styles/DonutGroupDisplay"), { ssr: false }),
-  "particle-rank": dynamic(() => import("@/components/styles/ParticleRankDisplay"), { ssr: false }),
-  "glass-card": dynamic(() => import("@/components/styles/GlassCardDisplay"), { ssr: false }),
+  "default-bar": dynamic(() => import("@/components/styles/DefaultBarDisplay").then(mod => ({ default: mod.default || mod })), { ssr: false }),
+  "card-flow": dynamic(() => import("@/components/styles/CardFlowDisplay").then(mod => ({ default: mod.default || mod })), { ssr: false }),
+  "crystal-bar": dynamic(() => import("@/components/styles/CrystalBarDisplay").then(mod => ({ default: mod.default || mod })), { ssr: false }),
+  "liquid-bar": dynamic(() => import("@/components/styles/LiquidBarDisplay").then(mod => ({ default: mod.default || mod })), { ssr: false }),
+  "donut-group": dynamic(() => import("@/components/styles/DonutGroupDisplay").then(mod => ({ default: mod.default || mod })), { ssr: false }),
+  "particle-rank": dynamic(() => import("@/components/styles/ParticleRankDisplay").then(mod => ({ default: mod.default || mod })), { ssr: false }),
+  "glass-card": dynamic(() => import("@/components/styles/GlassCardDisplay").then(mod => ({ default: mod.default || mod })), { ssr: false }),
 };
 
 // 样式图标映射

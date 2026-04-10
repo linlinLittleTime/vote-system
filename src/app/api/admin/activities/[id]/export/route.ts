@@ -33,7 +33,7 @@ export async function GET(
       return NextResponse.json({ error: "活动不存在" }, { status: 404 });
     }
 
-    const options = activity.options as ActivityOption[];
+    const options = activity.options as unknown as ActivityOption[];
 
     if (format === "csv") {
       const csv = generateVoteCSV(votes, options);
@@ -53,7 +53,7 @@ export async function GET(
         votesMap
       );
 
-      return new NextResponse(buffer, {
+      return new NextResponse(new Uint8Array(buffer), {
         headers: {
           "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "Content-Disposition": `attachment; filename="activity_${id}.xlsx"`,

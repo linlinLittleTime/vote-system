@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import { getAdminSession } from "@/lib/auth";
 import { validateCsrfRequest } from "@/lib/csrf";
 import type { ActivityOption, UpdateActivityRequest } from "@/types/api";
@@ -44,7 +45,7 @@ export async function GET(
     const countMap = new Map(voteCounts.map((v) => [v.optionId, v._count.id]));
 
     // 计算每个选项的票数
-    const options = activity.options as ActivityOption[];
+    const options = activity.options as unknown as ActivityOption[];
     const optionsWithVotes = options.map((opt) => ({
       ...opt,
       voteCount: countMap.get(opt.id) || 0,
@@ -120,12 +121,12 @@ export async function PUT(
       data: {
         title: title || existing.title,
         description: description !== undefined ? description : existing.description,
-        options: options || existing.options,
+        options: (options || existing.options) as unknown as Prisma.InputJsonValue,
         ruleType: ruleType || existing.ruleType,
         maxVotes: maxVotes !== undefined ? maxVotes : existing.maxVotes,
         startTime: startTime !== undefined ? (startTime ? new Date(startTime) : null) : existing.startTime,
         endTime: endTime !== undefined ? (endTime ? new Date(endTime) : null) : existing.endTime,
-        styleConfig: styleConfig !== undefined ? styleConfig : existing.styleConfig,
+        styleConfig: (styleConfig !== undefined ? styleConfig : existing.styleConfig) as unknown as Prisma.InputJsonValue,
       },
       include: { style: true },
     });

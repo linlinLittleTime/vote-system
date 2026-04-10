@@ -19,7 +19,8 @@ const pool = new Pool({
   idleTimeoutMillis: 30000, // 空闲连接超时
 });
 
-const adapter = new PrismaPg(pool);
+// Type assertion to work around type mismatch between pg and @prisma/adapter-pg types
+const adapter = new PrismaPg(pool as any);
 
 export const prisma =
   globalForPrisma.prisma ?? new PrismaClient({ adapter });

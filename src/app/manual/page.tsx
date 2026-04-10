@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Step {
@@ -139,7 +139,7 @@ const manualSections: Section[] = [
 
 // 界面示意图组件
 function ScreenMock({ type }: { type: string }) {
-  const mockScreens: Record<string, JSX.Element> = {
+  const mockScreens: Record<string, React.JSX.Element> = {
     home: (
       <div className="bg-gray-100 rounded-lg p-2 w-full max-w-3xl mx-auto">
         <div className="flex gap-2">
